@@ -3,7 +3,6 @@ import {
   ShieldPlus,
   MapPin,
   Store,
-  Bot,
   Users,
   Star,
   Sparkles,
@@ -11,26 +10,31 @@ import {
   Phone,
   LockKeyhole,
   ArrowRight,
-  Download,
   BadgeCheck,
   HeartPulse,
   Siren,
+  Bot,
 } from "lucide-react";
 
 const cx = (...classes) => classes.filter(Boolean).join(" ");
 
-// Update these when your stores are live
+// Links
+const BDAPPS_URL = "https://bdapps.com/appstore-v4-consumer/app-details/APP_130310";
 const PLAY_STORE_URL = "#";
 const APP_STORE_URL = "#";
 
+// Logos (place in public/assets/)
+const PAWBUDDY_LOGO = "/assets/pawbuddy-logo.png";
+const ROBI_LOGO = "/assets/robi-logo.png";
+const APPLE_LOGO = "/assets/apple-logo.png";
+const PLAY_LOGO = "/assets/store-logo.svg";
+const BDAPPS_LOGO = "/assets/bdapps-logo.png";
+
 function Pill({ children, tone = "neutral" }) {
   const tones = {
-    neutral:
-      "border-slate-200/70 bg-white/70 text-slate-700 ring-1 ring-white/60 shadow-sm",
-    emerald:
-      "border-emerald-200/60 bg-emerald-50/80 text-emerald-800 ring-1 ring-white/60 shadow-sm",
-    violet:
-      "border-violet-200/60 bg-violet-50/80 text-violet-800 ring-1 ring-white/60 shadow-sm",
+    neutral: "border-slate-200/70 bg-white/70 text-slate-700 ring-1 ring-white/60 shadow-sm",
+    emerald: "border-emerald-200/60 bg-emerald-50/80 text-emerald-800 ring-1 ring-white/60 shadow-sm",
+    violet: "border-violet-200/60 bg-violet-50/80 text-violet-800 ring-1 ring-white/60 shadow-sm",
   };
   return (
     <span className={cx("inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs", tones[tone])}>
@@ -40,12 +44,13 @@ function Pill({ children, tone = "neutral" }) {
 }
 
 function SectionTitle({ kicker, title, desc }) {
+  const kickerIsString = typeof kicker === "string";
   return (
     <div className="mx-auto mb-10 max-w-3xl text-center">
       {kicker ? (
         <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-50 to-emerald-50 px-3 py-1 text-xs text-slate-700 ring-1 ring-slate-200/60 shadow-sm">
-          <Sparkles className="h-4 w-4 text-violet-600" />
-          {kicker}
+          {kickerIsString ? <Sparkles className="h-4 w-4 text-violet-600" /> : null}
+          <span className="inline-flex items-center gap-2">{kicker}</span>
         </div>
       ) : null}
       <h2 className="text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl">{title}</h2>
@@ -58,24 +63,63 @@ function StoreButtons({ className = "" }) {
   return (
     <div className={cx("flex flex-wrap items-center gap-3", className)}>
       <a
+        href={BDAPPS_URL}
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-900 ring-1 ring-slate-200/70 shadow-sm transition hover:translate-y-[-1px]"
+        title="Open on BDApps Store"
+      >
+        <img
+          src={BDAPPS_LOGO}
+          alt="BDApps"
+          className="h-5 w-5 object-contain"
+          onError={(e) => (e.currentTarget.style.display = "none")}
+        />
+        BDApps Store
+        <ArrowRight className="h-4 w-4" />
+      </a>
+
+      <a
         href={PLAY_STORE_URL}
+        target="_blank"
+        rel="noreferrer"
         className="inline-flex items-center justify-center gap-2 rounded-2xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:translate-y-[-1px] hover:bg-violet-700"
       >
-        <Download className="h-4 w-4" />
+        <img
+          src={PLAY_LOGO}
+          alt="Play Store"
+          className="h-5 w-5 object-contain"
+          onError={(e) => (e.currentTarget.style.display = "none")}
+        />
         Play Store
       </a>
+
       <a
         href={APP_STORE_URL}
+        target="_blank"
+        rel="noreferrer"
         className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:translate-y-[-1px] hover:bg-emerald-700"
       >
-        <Download className="h-4 w-4" />
+        <img
+          src={APPLE_LOGO}
+          alt="App Store"
+          className="h-5 w-5 object-contain"
+          onError={(e) => (e.currentTarget.style.display = "none")}
+        />
         App Store
       </a>
+
       <a
         href="#subscribe"
         className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-900 ring-1 ring-slate-200/70 shadow-sm transition hover:translate-y-[-1px]"
       >
-        Subscribe (Robi)
+        <img
+          src={ROBI_LOGO}
+          alt="Robi"
+          className="h-5 w-5 object-contain"
+          onError={(e) => (e.currentTarget.style.display = "none")}
+        />
+        Subscribe
         <ArrowRight className="h-4 w-4" />
       </a>
     </div>
@@ -83,24 +127,44 @@ function StoreButtons({ className = "" }) {
 }
 
 function FeatureCard({ icon: Icon, title, desc, tone = "violet" }) {
-  const toneStyles =
+  const wrapper =
     tone === "emerald"
-      ? "bg-emerald-50/50 ring-emerald-200/50"
+      ? "from-emerald-50/90 to-white"
       : tone === "slate"
-      ? "bg-slate-50 ring-slate-200/70"
-      : "bg-violet-50/50 ring-violet-200/50";
+      ? "from-slate-50/90 to-white"
+      : "from-violet-50/90 to-white";
+
+  const badge =
+    tone === "emerald"
+      ? "bg-emerald-50 text-emerald-800 ring-emerald-200/60"
+      : tone === "slate"
+      ? "bg-slate-50 text-slate-700 ring-slate-200/70"
+      : "bg-violet-50 text-violet-800 ring-violet-200/60";
 
   const iconStyles =
     tone === "emerald" ? "text-emerald-700" : tone === "slate" ? "text-slate-700" : "text-violet-700";
 
+  const badgeLabel = tone === "violet" ? "Rescue" : tone === "emerald" ? "Care" : "Community";
+
   return (
-    <div className="rounded-3xl bg-white/70 p-5 shadow-sm ring-1 ring-slate-200/70">
+    <div className="rounded-3xl bg-white/75 p-5 shadow-sm ring-1 ring-slate-200/70">
       <div className="flex items-start gap-3">
-        <div className={cx("rounded-2xl p-2 ring-1", toneStyles)}>
+        <div
+          className={cx(
+            "rounded-2xl p-2 ring-1 shadow-sm bg-gradient-to-br",
+            wrapper,
+            "ring-slate-200/70"
+          )}
+        >
           <Icon className={cx("h-5 w-5", iconStyles)} />
         </div>
-        <div>
-          <div className="text-sm font-semibold text-slate-900">{title}</div>
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="text-sm font-semibold text-slate-900">{title}</div>
+            <span className={cx("rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1", badge)}>
+              {badgeLabel}
+            </span>
+          </div>
           <div className="mt-1 text-sm leading-6 text-slate-600">{desc}</div>
         </div>
       </div>
@@ -110,7 +174,7 @@ function FeatureCard({ icon: Icon, title, desc, tone = "violet" }) {
 
 function ScreenshotCard({ src, title, desc }) {
   return (
-    <div className="group overflow-hidden rounded-3xl bg-white/70 shadow-sm ring-1 ring-slate-200/70">
+    <div className="group overflow-hidden rounded-3xl bg-white/75 shadow-sm ring-1 ring-slate-200/70">
       <div className="relative aspect-[3/4] w-full overflow-hidden bg-gradient-to-br from-violet-100/70 to-emerald-100/40">
         <img
           src={src}
@@ -131,7 +195,7 @@ function ScreenshotCard({ src, title, desc }) {
 }
 
 function OTPCard() {
-  const [tab, setTab] = useState("premium"); // "premium" | "report"
+  const [tab, setTab] = useState("premium");
   const [phone, setPhone] = useState("");
   const [otpRequested, setOtpRequested] = useState(false);
   const [otp, setOtp] = useState("");
@@ -148,17 +212,17 @@ function OTPCard() {
   const handleRequestOtp = (e) => {
     e.preventDefault();
     if (!canRequestOtp) {
-      setStatus("Please enter a valid Bangladesh mobile number (11 digits).");
+      setStatus("Enter a valid Bangladesh mobile number (11 digits).");
       return;
     }
     setOtpRequested(true);
-    setStatus("OTP requested. Please enter the code you receive to confirm.");
+    setStatus("OTP requested. Enter the code to confirm subscription.");
   };
 
   const handleVerify = (e) => {
     e.preventDefault();
     if (!canVerify) {
-      setStatus("Please enter your OTP to continue.");
+      setStatus("Please enter your OTP.");
       return;
     }
     setStatus("OTP captured. Connect Robi verification to activate subscription.");
@@ -171,7 +235,7 @@ function OTPCard() {
   };
 
   return (
-    <div id="subscribe" className="rounded-3xl bg-white/75 p-4 shadow-sm ring-1 ring-slate-200/70 md:p-5">
+    <div id="subscribe" className="rounded-3xl bg-white/80 p-4 shadow-sm ring-1 ring-slate-200/70 md:p-5">
       <div className="flex items-center justify-between gap-3">
         <div className="text-sm font-semibold text-slate-900">Get started</div>
         <div className="rounded-2xl bg-slate-50 p-1 ring-1 ring-slate-200/70">
@@ -182,7 +246,9 @@ function OTPCard() {
             }}
             className={cx(
               "rounded-2xl px-3 py-1.5 text-xs font-semibold transition",
-              tab === "premium" ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/70" : "text-slate-600 hover:text-slate-900"
+              tab === "premium"
+                ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/70"
+                : "text-slate-600 hover:text-slate-900"
             )}
           >
             Premium
@@ -194,7 +260,9 @@ function OTPCard() {
             }}
             className={cx(
               "rounded-2xl px-3 py-1.5 text-xs font-semibold transition",
-              tab === "report" ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/70" : "text-slate-600 hover:text-slate-900"
+              tab === "report"
+                ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/70"
+                : "text-slate-600 hover:text-slate-900"
             )}
           >
             Report Rescue
@@ -206,7 +274,12 @@ function OTPCard() {
         <>
           <div className="mt-4 rounded-3xl bg-gradient-to-br from-violet-600/10 via-white to-emerald-600/10 p-4 ring-1 ring-slate-200/70">
             <div className="flex items-center gap-2 text-slate-900">
-              <BadgeCheck className="h-5 w-5 text-violet-600" />
+              <img
+                src={ROBI_LOGO}
+                alt="Robi"
+                className="h-5 w-5 object-contain"
+                onError={(e) => (e.currentTarget.style.display = "none")}
+              />
               <div className="text-sm font-semibold">Premium via Robi</div>
               <span className="ml-auto rounded-full bg-emerald-600/10 px-2 py-0.5 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-200/60">
                 ৳2 / day
@@ -214,22 +287,17 @@ function OTPCard() {
             </div>
 
             <ul className="mt-3 space-y-2 text-sm text-slate-700">
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                24/7 VetBot (full access)
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                Priority notifications to rescue teams & vets
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                Store discounts + rewards & leaderboard perks
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                Auto-volunteer perks (gamified)
-              </li>
+              {[
+                "24/7 VetBot (full access)",
+                "Priority notifications to rescue teams & vets",
+                "Store discounts + rewards & leaderboard perks",
+                "Auto-volunteer perks (gamified)",
+              ].map((x) => (
+                <li key={x} className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  {x}
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -291,13 +359,11 @@ function OTPCard() {
                 className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-slate-200/70 transition hover:translate-y-[-1px]"
               >
                 Download App
-                <Download className="h-4 w-4" />
+                <ArrowRight className="h-4 w-4" />
               </a>
             </div>
 
-            <p className="text-center text-xs text-slate-500">
-              By subscribing, you agree to our Terms & Privacy Policy.
-            </p>
+            <p className="text-center text-xs text-slate-500">By subscribing, you agree to our Terms & Privacy Policy.</p>
           </form>
         </>
       ) : (
@@ -345,20 +411,20 @@ export default function App() {
     {
       icon: HeartPulse,
       title: "Vet-guided Support",
-      desc: "24/7 VetBot for guidance and emergency tips, with a clear handoff to real vets.",
+      desc: "24/7 VetBot guidance and emergency next steps, with handoff to trusted vets when needed.",
       tone: "emerald",
     },
     {
-      icon: Store,
-      title: "Pet Store",
-      desc: "Food and essentials in one place, with Premium discounts and reward perks.",
-      tone: "slate",
+      icon: Bot,
+      title: "Always-on VetBot",
+      desc: "Quick answers for symptoms, prevention, and urgent decisions—built for Bangladesh.",
+      tone: "emerald",
     },
     {
       icon: Users,
       title: "Volunteer Network",
-      desc: "Gamified volunteering with rewards, leaderboard, and community-driven impact.",
-      tone: "emerald",
+      desc: "Gamified volunteering with rewards & leaderboard—turn good intentions into real impact.",
+      tone: "slate",
     },
   ];
 
@@ -369,35 +435,34 @@ export default function App() {
   ];
 
   const faqs = [
-    {
-      q: "What’s included in Basic?",
-      a: "Rescue reporting, pet store access, VetBot (limited), and volunteer discovery.",
-    },
-    {
-      q: "What does Premium unlock?",
-      a: "Full VetBot access, priority notifications, store discounts, and rewards + volunteer perks.",
-    },
-    {
-      q: "How does Robi billing work?",
-      a: "Enter your Robi number, request OTP, and confirm subscription at ৳2/day.",
-    },
+    { q: "What’s included in Basic?", a: "Rescue reporting, store access, VetBot (limited), and volunteer discovery." },
+    { q: "What does Premium unlock?", a: "Full VetBot, priority notifications, store discounts, plus rewards & perks." },
+    { q: "How does Robi billing work?", a: "Enter your Robi number, request OTP, and confirm subscription at ৳2/day." },
     {
       q: "Is PawBuddy an emergency service?",
-      a: "PawBuddy helps coordinate and guide. For severe emergencies, contact a nearby vet or local rescue hotline.",
+      a: "It helps coordinate and guide. For severe emergencies, contact the nearest vet or rescue hotline immediately.",
     },
   ];
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
+      {/* Background */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute inset-0 bg-[radial-gradient(65%_55%_at_50%_0%,rgba(139,92,246,0.18)_0%,rgba(16,185,129,0.10)_42%,rgba(255,255,255,0)_75%)]" />
-        <div className="absolute -top-40 left-1/2 h-[540px] w-[980px] -translate-x-1/2 rounded-full bg-gradient-to-r from-violet-300/25 via-white/10 to-emerald-300/20 blur-3xl" />
+        <div className="absolute -top-44 left-1/2 h-[560px] w-[980px] -translate-x-1/2 rounded-full bg-gradient-to-r from-violet-300/25 via-white/10 to-emerald-300/20 blur-3xl" />
       </div>
 
+      {/* Header */}
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/70">
-            <span className="text-xs text-slate-500">Logo</span>
+          {/* Logo: circle + object-cover so it fills perfectly */}
+          <div className="h-10 w-10 overflow-hidden rounded-full bg-white shadow-sm ring-1 ring-slate-200/70">
+            <img
+              src={PAWBUDDY_LOGO}
+              alt="PawBuddy"
+              className="h-full w-full object-cover"
+              onError={(e) => (e.currentTarget.style.display = "none")}
+            />
           </div>
           <div>
             <div className="text-sm font-semibold leading-4">PawBuddy</div>
@@ -406,27 +471,58 @@ export default function App() {
         </div>
 
         <nav className="hidden items-center gap-4 text-sm text-slate-600 md:flex">
-          <a className="hover:text-slate-900" href="#features">Features</a>
-          <a className="hover:text-slate-900" href="#premium">Premium</a>
-          <a className="hover:text-slate-900" href="#screens">Screens</a>
-          <a className="hover:text-slate-900" href="#faq">FAQ</a>
+          <a className="hover:text-slate-900" href="#features">
+            Features
+          </a>
+          <a className="hover:text-slate-900" href="#premium">
+            Premium
+          </a>
+          <a className="hover:text-slate-900" href="#screens">
+            Screens
+          </a>
+          <a className="hover:text-slate-900" href="#faq">
+            FAQ
+          </a>
+
           <a
             className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-slate-200/70 transition hover:translate-y-[-1px]"
             href="#download"
           >
             Download
           </a>
+
           <a
-            className="rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:translate-y-[-1px] hover:bg-violet-700"
+            className="inline-flex items-center gap-2 rounded-2xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:translate-y-[-1px] hover:bg-violet-700"
             href="#subscribe"
           >
+            <img
+              src={ROBI_LOGO}
+              alt="Robi"
+              className="h-4 w-4 object-contain"
+              onError={(e) => (e.currentTarget.style.display = "none")}
+            />
             Subscribe
           </a>
         </nav>
+
+        {/* Mobile quick actions */}
+        <div className="flex items-center gap-2 md:hidden">
+          <a
+            href="#download"
+            className="rounded-2xl bg-white px-3 py-2 text-xs font-semibold text-slate-900 shadow-sm ring-1 ring-slate-200/70"
+          >
+            Download
+          </a>
+          <a href="#subscribe" className="rounded-2xl bg-violet-600 px-3 py-2 text-xs font-semibold text-white shadow-sm">
+            Subscribe
+          </a>
+        </div>
       </header>
 
+      {/* Main */}
       <main className="mx-auto max-w-6xl px-5 pb-16 pt-6 md:pb-24">
         <div className="grid gap-8 md:grid-cols-[1.15fr_0.85fr] md:items-start">
+          {/* Left */}
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <Pill tone="violet">
@@ -452,30 +548,46 @@ export default function App() {
             </p>
 
             <div className="mt-6 flex flex-wrap items-center gap-3">
+              {/* Main download button -> BDApps (with bdapps logo inside) */}
               <a
-                href="#download"
+                href={BDAPPS_URL}
+                target="_blank"
+                rel="noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-2xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:translate-y-[-1px] hover:bg-violet-700"
               >
+                <img
+                  src={BDAPPS_LOGO}
+                  alt="BDApps"
+                  className="h-5 w-5 object-contain"
+                  onError={(e) => (e.currentTarget.style.display = "none")}
+                />
                 Download PawBuddy
-                <Download className="h-4 w-4" />
+                <ArrowRight className="h-4 w-4" />
               </a>
 
               <a
                 href="#subscribe"
                 className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-slate-200/70 transition hover:translate-y-[-1px]"
               >
+                <img
+                  src={ROBI_LOGO}
+                  alt="Robi"
+                  className="h-5 w-5 object-contain"
+                  onError={(e) => (e.currentTarget.style.display = "none")}
+                />
                 Subscribe via Robi (৳2/day)
                 <ArrowRight className="h-4 w-4" />
               </a>
             </div>
 
+            {/* Hero collage */}
             <div className="mt-8 grid grid-cols-3 gap-3">
               {[
                 { src: "/assets/hero-rescue.png", label: "Rescue Report" },
                 { src: "/assets/hero-vetbot.png", label: "VetBot + Vets" },
                 { src: "/assets/hero-store.png", label: "Pet Store" },
               ].map((x) => (
-                <div key={x.label} className="overflow-hidden rounded-3xl bg-white/70 shadow-sm ring-1 ring-slate-200/70">
+                <div key={x.label} className="overflow-hidden rounded-3xl bg-white/75 shadow-sm ring-1 ring-slate-200/70">
                   <div className="relative aspect-[3/4] bg-gradient-to-br from-violet-100/70 to-emerald-100/40">
                     <img
                       src={x.src}
@@ -484,7 +596,7 @@ export default function App() {
                       onError={(e) => (e.currentTarget.style.display = "none")}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-                    <div className="absolute bottom-3 left-3 rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200/70">
+                    <div className="absolute bottom-3 left-3 rounded-full bg-white/85 px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200/70">
                       {x.label}
                     </div>
                   </div>
@@ -493,9 +605,11 @@ export default function App() {
             </div>
           </div>
 
+          {/* Right */}
           <div className="md:sticky md:top-6">
             <OTPCard />
-            <div className="mt-4 rounded-3xl bg-white/75 p-4 shadow-sm ring-1 ring-slate-200/70">
+
+            <div className="mt-4 rounded-3xl bg-white/80 p-4 shadow-sm ring-1 ring-slate-200/70">
               <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
                 <ShieldPlus className="h-4 w-4 text-emerald-700" />
                 Trust & Safety
@@ -503,22 +617,23 @@ export default function App() {
               <ul className="mt-2 space-y-2 text-sm text-slate-600">
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-600" />
-                  Community-driven rescue coordination and verified support flows.
+                  PawBuddy coordinates rescue & guidance. Response time depends on nearby teams and availability.
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-600" />
-                  For severe emergencies, contact the nearest vet or local rescue hotline.
+                  For severe emergencies, contact your nearest vet or local rescue hotline immediately.
                 </li>
               </ul>
             </div>
           </div>
         </div>
 
+        {/* Features */}
         <section id="features" className="mt-16 scroll-mt-24 md:mt-24">
           <SectionTitle
-            kicker="Everything in one place"
+            kicker="Cute enough for pets — serious enough for rescue"
             title="Rescue + Care + Store + Community"
-            desc="Designed for fast action when it matters — and ongoing care every day."
+            desc="Fast action when it matters, and supportive care every day."
           />
           <div className="grid gap-4 md:grid-cols-2">
             {features.map((f) => (
@@ -527,11 +642,12 @@ export default function App() {
           </div>
         </section>
 
+        {/* How it works */}
         <section className="mt-16 md:mt-24">
           <SectionTitle title="How PawBuddy works" desc="Simple flow: report → dispatch → care." />
           <div className="grid gap-4 md:grid-cols-3">
             {howItWorks.map((h) => (
-              <div key={h.step} className="rounded-3xl bg-white/70 p-6 shadow-sm ring-1 ring-slate-200/70">
+              <div key={h.step} className="rounded-3xl bg-white/75 p-6 shadow-sm ring-1 ring-slate-200/70">
                 <div className="flex items-center gap-3">
                   <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600/15 to-emerald-600/15 text-sm font-semibold text-slate-900 ring-1 ring-slate-200/70">
                     {h.step}
@@ -544,15 +660,26 @@ export default function App() {
           </div>
         </section>
 
+        {/* Premium */}
         <section id="premium" className="mt-16 scroll-mt-24 md:mt-24">
           <SectionTitle
-            kicker="Robi carrier billing"
+            kicker={
+              <span className="inline-flex items-center gap-2">
+                <img
+                  src={ROBI_LOGO}
+                  alt="Robi"
+                  className="h-4 w-4 object-contain"
+                  onError={(e) => (e.currentTarget.style.display = "none")}
+                />
+                Robi carrier billing
+              </span>
+            }
             title="Premium ৳2/day — unlock priority + perks"
             desc="Keep Basic free for everyone, and use Premium to fund speed + support."
           />
 
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-3xl bg-white/70 p-6 shadow-sm ring-1 ring-slate-200/70">
+            <div className="rounded-3xl bg-white/75 p-6 shadow-sm ring-1 ring-slate-200/70">
               <div className="text-sm font-semibold text-slate-900">Basic (Free)</div>
               <ul className="mt-4 space-y-3 text-sm text-slate-700">
                 {[
@@ -598,20 +725,26 @@ export default function App() {
                   className="inline-flex items-center justify-center gap-2 rounded-2xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white transition hover:translate-y-[-1px] hover:bg-violet-700"
                 >
                   Download
-                  <Download className="h-4 w-4" />
+                  <ArrowRight className="h-4 w-4" />
                 </a>
                 <a
                   href="#subscribe"
                   className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-slate-200/70 transition hover:translate-y-[-1px]"
                 >
+                  <img
+                    src={ROBI_LOGO}
+                    alt="Robi"
+                    className="h-5 w-5 object-contain"
+                    onError={(e) => (e.currentTarget.style.display = "none")}
+                  />
                   Subscribe
-                  <ArrowRight className="h-4 w-4" />
                 </a>
               </div>
             </div>
           </div>
         </section>
 
+        {/* Screens */}
         <section id="screens" className="mt-16 scroll-mt-24 md:mt-24">
           <SectionTitle title="A quick look inside the app" desc="Rescue reporting, VetBot, and store — all in one place." />
           <div className="grid gap-4 md:grid-cols-4">
@@ -622,24 +755,65 @@ export default function App() {
           </div>
         </section>
 
+        {/* Download */}
         <section id="download" className="mt-16 scroll-mt-24 md:mt-24">
-          <div className="rounded-3xl bg-white/70 p-8 shadow-sm ring-1 ring-slate-200/70 md:p-10">
+          <div className="rounded-3xl bg-white/75 p-8 shadow-sm ring-1 ring-slate-200/70 md:p-10">
             <div className="grid items-center gap-8 md:grid-cols-2">
               <div>
-                <h3 className="text-2xl font-semibold tracking-tight text-slate-900">Download PawBuddy</h3>
+                <h3 className="flex items-center gap-3 text-2xl font-semibold tracking-tight text-slate-900">
+  <span className="h-9 w-9 overflow-hidden rounded-full bg-white ring-1 ring-slate-200/70">
+    <img
+      src={PAWBUDDY_LOGO}
+      alt="PawBuddy"
+      className="h-full w-full object-cover"
+    />
+  </span>
+  Download PawBuddy
+</h3>
+
                 <p className="mt-3 text-sm leading-6 text-slate-600 md:text-base">
                   Start reporting rescues, get VetBot guidance anytime, and support faster response with Premium.
                 </p>
-                <div className="mt-6">
+
+                {/* Primary call-to-action: BDApps first */}
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <a
+                    href={BDAPPS_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:translate-y-[-1px] hover:bg-violet-700"
+                  >
+                    <img
+                      src={BDAPPS_LOGO}
+                      alt="BDApps"
+                      className="h-5 w-5 object-contain"
+                      onError={(e) => (e.currentTarget.style.display = "none")}
+                    />
+                    Download PawBuddy
+                    <ArrowRight className="h-4 w-4" />
+                  </a>
+                </div>
+
+                {/* Store buttons row */}
+                <div className="mt-4">
                   <StoreButtons />
                 </div>
               </div>
 
               <div className="rounded-3xl bg-gradient-to-br from-violet-100/70 to-emerald-100/40 p-6 ring-1 ring-slate-200/70">
-                <div className="text-sm font-semibold text-slate-900">Scan to download</div>
-                <p className="mt-2 text-sm text-slate-600">
-                  Add your QR code here when ready.
-                </p>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-sm font-semibold text-slate-900">Scan to download</div>
+                  <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200/70 shadow-sm">
+                    <img
+                      src={ROBI_LOGO}
+                      alt="Robi"
+                      className="h-4 w-4 object-contain"
+                      onError={(e) => (e.currentTarget.style.display = "none")}
+                    />
+                    Robi supported
+                  </span>
+                </div>
+                <p className="mt-2 text-sm text-slate-600">Add your QR code here when ready.</p>
                 <div className="mt-4 flex aspect-square w-full items-center justify-center rounded-2xl bg-white/70 text-xs text-slate-500 ring-1 ring-slate-200/70">
                   QR
                 </div>
@@ -648,11 +822,12 @@ export default function App() {
           </div>
         </section>
 
+        {/* FAQ */}
         <section id="faq" className="mt-16 scroll-mt-24 md:mt-24">
           <SectionTitle title="FAQ" desc="Answers that help users feel confident and safe." />
           <div className="grid gap-4 md:grid-cols-2">
             {faqs.map((f) => (
-              <div key={f.q} className="rounded-3xl bg-white/70 p-6 shadow-sm ring-1 ring-slate-200/70">
+              <div key={f.q} className="rounded-3xl bg-white/75 p-6 shadow-sm ring-1 ring-slate-200/70">
                 <div className="text-sm font-semibold text-slate-900">{f.q}</div>
                 <div className="mt-2 text-sm leading-6 text-slate-600">{f.a}</div>
               </div>
@@ -660,20 +835,46 @@ export default function App() {
           </div>
         </section>
 
+        {/* Footer */}
         <footer className="mt-16 border-t border-slate-200/70 py-10 text-sm text-slate-500">
           <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-            <div>
-              <div className="font-semibold text-slate-900">PawBuddy</div>
-              <div className="mt-1">© {new Date().getFullYear()} • Rescue & care for Bangladesh</div>
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 overflow-hidden rounded-full bg-white ring-1 ring-slate-200/70">
+                <img
+                  src={PAWBUDDY_LOGO}
+                  alt="PawBuddy"
+                  className="h-full w-full object-cover"
+                  onError={(e) => (e.currentTarget.style.display = "none")}
+                />
+              </div>
+              <div>
+                <div className="font-semibold text-slate-900">PawBuddy</div>
+                <div className="mt-1">© {new Date().getFullYear()} • Rescue & care for Bangladesh</div>
+              </div>
             </div>
+
             <div className="flex flex-wrap gap-4">
-              <a className="hover:text-slate-900" href="#features">Features</a>
-              <a className="hover:text-slate-900" href="#premium">Premium</a>
-              <a className="hover:text-slate-900" href="#screens">Screens</a>
-              <a className="hover:text-slate-900" href="#download">Download</a>
-              <a className="hover:text-slate-900" href="#subscribe">Subscribe</a>
-              <a className="hover:text-slate-900" href="#0">Terms</a>
-              <a className="hover:text-slate-900" href="#0">Privacy</a>
+              <a className="hover:text-slate-900" href="#features">
+                Features
+              </a>
+              <a className="hover:text-slate-900" href="#premium">
+                Premium
+              </a>
+              <a className="hover:text-slate-900" href="#screens">
+                Screens
+              </a>
+              <a className="hover:text-slate-900" href="#download">
+                Download
+              </a>
+              <a className="hover:text-slate-900" href="#subscribe">
+                Subscribe
+              </a>
+              <a className="hover:text-slate-900" href="#0">
+                Terms
+              </a>
+              <a className="hover:text-slate-900" href="#0">
+                Privacy
+              </a>
             </div>
           </div>
         </footer>
