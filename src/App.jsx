@@ -1,3 +1,4 @@
+const OTP_API_BASE = "https://pawbuddy-otp.onrender.com";
 import React, { useMemo, useState } from "react";
 import {
   ShieldPlus,
@@ -201,37 +202,111 @@ function OTPCard() {
   const [otp, setOtp] = useState("");
   const [status, setStatus] = useState("");
 
+  // NEW:
+  const [referenceNo, setReferenceNo] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const isBDNumber = useMemo(() => {
     const digits = phone.replace(/\D/g, "");
     return digits.length === 11 && digits.startsWith("01");
   }, [phone]);
 
-  const canRequestOtp = isBDNumber && !otpRequested;
-  const canVerify = otpRequested && otp.replace(/\D/g, "").length >= 4;
-
-  const handleRequestOtp = (e) => {
-    e.preventDefault();
-    if (!canRequestOtp) {
-      setStatus("Enter a valid Bangladesh mobile number (11 digits).");
-      return;
-    }
-    setOtpRequested(true);
-    setStatus("OTP requested. Enter the code to confirm subscription.");
-  };
-
-  const handleVerify = (e) => {
-    e.preventDefault();
-    if (!canVerify) {
-      setStatus("Please enter your OTP.");
-      return;
-    }
-    setStatus("OTP captured. Connect Robi verification to activate subscription.");
-  };
+  const canRequestOtp = isBDNumber && !otpRequested && !loading;
+  const canVerify =
+    otpRequested && otp.replace(/\D/g, "").length >= 4 && !!referenceNo && !loading;
 
   const reset = () => {
     setOtpRequested(false);
     setOtp("");
     setStatus("");
+    setReferenceNo("");
+    setLoading(false);
+  };
+
+  const handleRequestOtp = async (e) => {
+    e.preventDefault();
+    if (!isBDNumber) {
+      setStatus("Enter a valid Bangladesh mobile number (11 digits).");
+      return;
+    }
+
+    setLoading(true);
+    setStatus("Requesting OTP...");
+
+    try {
+      const digits = phone.replace(/\D/g, "");
+      const body = new URLSearchParams({ user_mobile: digits });
+
+      const res = await fetch(`${OTP_API_BASE}/send_otp.php`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body,
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data?.ok || !data?.referenceNo) {
+        const msg = data?.error || data?.statusDetail || "Failed to request OTP.";
+        setStatus(msg);
+        setLoading(false);
+        return;
+      }
+
+      setReferenceNo(data.referenceNo);
+      setOtpRequested(true);
+      setStatus("OTP sent. Enter the code to confirm subscription.");
+    } catch (err) {
+      setStatus(`Network error: ${String(err?.message || err)}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerify = async (e) => {
+    e.preventDefault();
+
+    const otpDigits = otp.replace(/\D/g, "");
+    if (otpDigits.length < 4) {
+      setStatus("Please enter a valid OTP.");
+      return;
+    }
+    if (!referenceNo) {
+      setStatus("Missing reference number. Please request OTP again.");
+      return;
+    }
+
+    setLoading(true);
+    setStatus("Verifying OTP...");
+
+    try {
+      const body = new URLSearchParams({
+        Otp: otpDigits,          // IMPORTANT: matches your PHP key "Otp"
+        referenceNo: referenceNo // IMPORTANT: matches your PHP key "referenceNo"
+      });
+
+      const res = await fetch(`${OTP_API_BASE}/verify_otp.php`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body,
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data?.ok) {
+        const msg = data?.error || data?.statusDetail || "OTP verification failed.";
+        setStatus(msg);
+        setLoading(false);
+        return;
+      }
+
+      const sub = data?.subscriptionStatus ?? "(unknown)";
+      setStatus(`✅ Verified. Subscription status: ${sub}`);
+      // Optional: if success, you can keep them "subscribed" in UI here.
+    } catch (err) {
+      setStatus(`Network error: ${String(err?.message || err)}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -285,20 +360,6 @@ function OTPCard() {
                 ৳2 / day
               </span>
             </div>
-
-            <ul className="mt-3 space-y-2 text-sm text-slate-700">
-              {[
-                "24/7 VetBot (full access)",
-                "Priority notifications to rescue teams & vets",
-                "Store discounts + rewards & leaderboard perks",
-                "Auto-volunteer perks (gamified)",
-              ].map((x) => (
-                <li key={x} className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  {x}
-                </li>
-              ))}
-            </ul>
           </div>
 
           <form onSubmit={otpRequested ? handleVerify : handleRequestOtp} className="mt-4 space-y-3">
@@ -350,7 +411,7 @@ function OTPCard() {
                     : "bg-violet-600/20 text-violet-900/40"
                 )}
               >
-                {otpRequested ? "Verify OTP" : "Request OTP"}
+                {loading ? "Please wait..." : otpRequested ? "Verify OTP" : "Request OTP"}
                 <ArrowRight className="h-4 w-4" />
               </button>
 
@@ -363,11 +424,22 @@ function OTPCard() {
               </a>
             </div>
 
+            {otpRequested ? (
+              <button
+                type="button"
+                onClick={reset}
+                className="w-full rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-900 ring-1 ring-slate-200/70"
+              >
+                Start over
+              </button>
+            ) : null}
+
             <p className="text-center text-xs text-slate-500">By subscribing, you agree to our Terms & Privacy Policy.</p>
           </form>
         </>
       ) : (
         <div className="mt-4 space-y-3">
+          {/* your existing report tab UI unchanged */}
           <div className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200/70">
             <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
               <MapPin className="h-4 w-4 text-violet-600" />
@@ -399,6 +471,7 @@ function OTPCard() {
     </div>
   );
 }
+
 
 export default function App() {
   const features = [
@@ -520,7 +593,7 @@ export default function App() {
       </header>
 
       {/* Main */}
-      <main className="mx-auto max-w-6xl px-5 pb-16 pt-6 md:pb-24">
+      <main className="mx-auto max-w-7xl px-5 pb-16 pt-6 md:pb-24">
         <div className="grid gap-8 md:grid-cols-[1.15fr_0.85fr] md:items-start">
           {/* Left */}
           <div>
