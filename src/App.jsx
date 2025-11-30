@@ -1,4 +1,3 @@
-const OTP_API_BASE = "https://pawbuddy-otp.onrender.com";
 import React, { useMemo, useState } from "react";
 import {
   ShieldPlus,
@@ -18,6 +17,8 @@ import {
 } from "lucide-react";
 
 const cx = (...classes) => classes.filter(Boolean).join(" ");
+
+const OTP_API_BASE = "https://pawbuddy-otp.onrender.com";
 
 // Links
 const BDAPPS_URL = "https://bdapps.com/appstore-v4-consumer/app-details/APP_130310";
